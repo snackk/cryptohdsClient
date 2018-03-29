@@ -22,25 +22,24 @@ public class Terminal {
         ClientHandler clientHandler = new ClientHandler();
 
         System.out.println("Ledger commands:");
-        System.out.println("	 - >" + REGISTER_LEDGER);
-        System.out.println("	 - >" + BALANCE_LEDGER);
-        System.out.println("	 - >" + AUDIT_LEDGER);
-        System.out.println("	 ----------------------------	 ");
+        System.out.println("	 ->" + REGISTER_LEDGER);
+        System.out.println("	 ->" + BALANCE_LEDGER);
+        System.out.println("	 ->" + AUDIT_LEDGER);
+        System.out.println("----------------------------");
         System.out.println("Operation commands:");
-        System.out.println("	 - >" + SEND_OPERATION);
-        System.out.println("	 - >" + RECEIVE_OPERATION);
-        System.out.println("	 ----------------------------	 ");
+        System.out.println("	 ->" + SEND_OPERATION);
+        System.out.println("	 ->" + RECEIVE_OPERATION);
+        System.out.println("----------------------------");
         System.out.println("Or simply: ");
-        System.out.println("	 - >" + EXIT);
-        System.out.println("");
-        System.out.println("$ ");
+        System.out.println("	 ->" + EXIT);
+        System.out.println("$> ");
 
         Scanner reader = new Scanner(System.in);
         String command = reader.nextLine();
         while(!command.equals(EXIT)){
 
-            String ledgerName;
-            String ledgerPassword;
+            String ledgerName = "";
+            String ledgerPassword = "";
 
             switch(command){
                 case REGISTER_LEDGER:
@@ -50,14 +49,20 @@ public class Terminal {
                     ledgerPassword = reader.nextLine();
 
                     clientHandler.register(ledgerName, ledgerPassword);
+
+                    System.out.println("$> ");
                     break;
                 case BALANCE_LEDGER:
+                    System.out.println("$> ");
                     break;
                 case AUDIT_LEDGER:
+                    System.out.println("$> ");
                     break;
                 case SEND_OPERATION:
+                    System.out.println("$> ");
                     break;
                 case RECEIVE_OPERATION:
+                    System.out.println("$> ");
                     break;
                 default:
                     ledgerName = "";
