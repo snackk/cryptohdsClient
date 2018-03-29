@@ -1,20 +1,16 @@
 package com.sec.cryptohdsclient.handler;
 
-import com.sec.cryptohdslibrary.keystore.ClientKeyStore;
+import com.sec.cryptohdslibrary.keystore.KeyStoreImpl;
 
 public class ClientHandler {
 
-    private ClientKeyStore clientKeyStore;
+    private KeyStoreImpl clientKeyStore;
 
-    private ClientKeyStore getKeyStore() {
+    private KeyStoreImpl getKeyStore() {
         return clientKeyStore;
     }
 
-    public ClientHandler() {
-        this.clientKeyStore = new ClientKeyStore();
-    }
-
     public void register(String ledgerName, String ledgerPassword) {
-        this.getKeyStore().generateKeyStore(ledgerName, ledgerPassword);
+        this.clientKeyStore = new KeyStoreImpl(ledgerName, ledgerPassword);
     }
 }
