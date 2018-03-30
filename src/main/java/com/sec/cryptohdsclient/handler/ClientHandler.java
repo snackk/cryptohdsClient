@@ -1,4 +1,4 @@
-package com.sec.cryptohdsclient.handler;
+package com.sec.cryptohdsClient.handler;
 
 import com.sec.cryptohdslibrary.keystore.KeyStoreImpl;
 
