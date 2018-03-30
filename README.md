@@ -7,10 +7,12 @@ Before anything, the following requirements must be met:
 
 You have to create a directory named "KeyStore" under "src", this is where we store the client's keys.
 
-## Running client Terminal
+## Running Client
 
 To run the App on the terminal do the following:
 ```sh
-$ mvn compile
-$ mvn exec:java
+$ mvn clean install 
+$ mvn spring-boot: run
 ```
+
+On IntelliJ there's no need of maven vodu, it has a spring button to run.
