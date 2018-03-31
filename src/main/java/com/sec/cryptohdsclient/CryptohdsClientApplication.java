@@ -1,6 +1,6 @@
-package com.sec.cryptohdsClient;
+package com.sec.cryptohdsclient;
 
-import com.sec.cryptohdsClient.handler.ClientHandler;
+import com.sec.cryptohdsclient.handler.ClientHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
