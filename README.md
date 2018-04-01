@@ -12,7 +12,7 @@ You have to create a directory named "KeyStore" under "src", this is where we st
 To run the App on the terminal do the following:
 ```sh
 $ mvn clean install 
-$ mvn spring-boot: run
+$ mvn spring-boot:run
 ```
 
 On IntelliJ there's no need of maven vodu, it has a spring button to run.
