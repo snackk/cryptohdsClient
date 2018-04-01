@@ -3,6 +3,7 @@ package com.sec.cryptohdsclient;
 import com.sec.cryptohdsclient.handler.ClientHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.util.Scanner;
 
@@ -10,7 +11,7 @@ import java.util.Scanner;
 public class CryptohdsClientApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(CryptohdsClientApplication.class, args);
+		ConfigurableApplicationContext context = SpringApplication.run(CryptohdsClientApplication.class, args);
 
 		/*LEDGER COMMANDS*/
 		final String REGISTER_LEDGER = "register";
@@ -36,14 +37,24 @@ public class CryptohdsClientApplication {
 		System.out.println("----------------------------");
 		System.out.println("Or simply: ");
 		System.out.println("	 ->" + EXIT);
-		System.out.println("$> ");
 
 		Scanner reader = new Scanner(System.in);
-		String command = reader.nextLine();
-		while(!command.equals(EXIT)){
 
+		// command will be stored here
+		String command = null;
+
+		while(!EXIT.equals(command)){
+
+			// clear variables
+			command = null;
 			String ledgerName = "";
 			String ledgerPassword = "";
+
+			System.out.print("$> ");
+			System.out.flush();
+
+			// read next command
+			command = reader.nextLine();
 
 			switch(command){
 				case REGISTER_LEDGER:
@@ -54,28 +65,21 @@ public class CryptohdsClientApplication {
 
 					clientHandler.register(ledgerName, ledgerPassword);
 
-					System.out.println("$> ");
 					break;
 				case BALANCE_LEDGER:
-					System.out.println("$> ");
 					break;
 				case AUDIT_LEDGER:
-					System.out.println("$> ");
 					break;
 				case SEND_OPERATION:
-					System.out.println("$> ");
 					break;
 				case RECEIVE_OPERATION:
-					System.out.println("$> ");
 					break;
 				default:
-					ledgerName = "";
-					ledgerPassword = "";
 					break;
 			}
-			command = "";
 		}
 		reader.close();
+		context.close();
 
 		return;
 	}
