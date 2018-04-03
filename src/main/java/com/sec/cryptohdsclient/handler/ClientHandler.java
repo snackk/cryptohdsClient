@@ -3,6 +3,7 @@ package com.sec.cryptohdsclient.handler;
 import com.sec.cryptohdsclient.web.rest.LedgerResource;
 import com.sec.cryptohdsclient.web.rest.SecurityResource;
 import com.sec.cryptohdslibrary.envelope.Envelope;
+import com.sec.cryptohdslibrary.envelope.Message;
 import com.sec.cryptohdslibrary.keystore.KeyStoreImpl;
 
 import org.springframework.stereotype.Service;
@@ -33,10 +34,11 @@ public class ClientHandler {
     public void register(String ledgerName, String ledgerPassword) {
         this.clientKeyStore = new KeyStoreImpl(ledgerName, ledgerPassword);
 
-        Envelope envelope = new Envelope(ledgerName, this.clientKeyStore);
+        Message message = new Message(ledgerName, this.clientKeyStore);
+        Envelope envelope = new Envelope();
+        envelope.cipherEnvelope(message, cryptoServerPublicKey);
 
-        /*TODO - Aqui da cagada... Nao da pa cifrar isto com RSA....*/
-        System.out.println(envelope.getCipheredEnvelope(cryptoServerPublicKey));
-        this.ledgerResource.createLedger(envelope.getCipheredEnvelope(cryptoServerPublicKey));
+        //TODO O server nao ta preparado para receber isto. yet.
+        //this.ledgerResource.createLedger(envelope);
     }
 }
