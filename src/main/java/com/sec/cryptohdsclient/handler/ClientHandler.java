@@ -34,6 +34,8 @@ public class ClientHandler {
         this.clientKeyStore = new KeyStoreImpl(ledgerName, ledgerPassword);
 
         Envelope envelope = new Envelope(ledgerName, this.clientKeyStore);
+
+        /*TODO - Aqui da cagada... Nao da pa cifrar isto com RSA....*/
         System.out.println(envelope.getCipheredEnvelope(cryptoServerPublicKey));
         this.ledgerResource.createLedger(envelope.getCipheredEnvelope(cryptoServerPublicKey));
     }
