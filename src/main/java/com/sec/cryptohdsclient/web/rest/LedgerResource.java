@@ -3,10 +3,16 @@ package com.sec.cryptohdsclient.web.rest;
 import com.sec.cryptohdslibrary.envelope.Envelope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class LedgerResource {
@@ -31,12 +37,13 @@ public class LedgerResource {
         return result.getStatusCode() == HttpStatus.NO_CONTENT;
     }*/
 
-    public boolean createLedger(Envelope envelope) {
+    public boolean createLedger(Envelope envelope, String publicKey) {
         RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<Envelope> requestBody = new HttpEntity<>(envelope);
+        envelope.setClientPublicKey(publicKey);
 
-        ResponseEntity<Envelope> result = restTemplate.postForEntity(URL + "ledgers", requestBody, Envelope.class);
+        HttpEntity<?> request = new HttpEntity<Object>(envelope);
 
+        ResponseEntity<Envelope> result = restTemplate.postForEntity(URL + "ledgers", request, Envelope.class);
         System.out.println("Status code:" + result.getStatusCode());
 
         return result.getStatusCode() == HttpStatus.NO_CONTENT;
