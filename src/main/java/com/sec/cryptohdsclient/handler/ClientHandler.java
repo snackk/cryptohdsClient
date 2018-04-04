@@ -8,6 +8,9 @@ import com.sec.cryptohdslibrary.keystore.KeyStoreImpl;
 
 import com.sec.cryptohdslibrary.security.CipherInstance;
 import com.sec.cryptohdslibrary.service.dto.LedgerDTO;
+
+import java.io.IOException;
+
 import org.springframework.stereotype.Service;
 
 
@@ -33,7 +36,7 @@ public class ClientHandler {
         return clientKeyStore;
     }
 
-    public void register(String ledgerName, String ledgerPassword) {
+    public void register(String ledgerName, String ledgerPassword) throws IOException {
         this.clientKeyStore = new KeyStoreImpl(ledgerName, ledgerPassword);
 
         String publicKey = CipherInstance.encodePublicKey(clientKeyStore.getkeyPairHDS().getPublic());
