@@ -16,7 +16,7 @@ public class Terminal implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
 
         /*LEDGER COMMANDS*/
         final String REGISTER_LEDGER = "register";
@@ -50,8 +50,6 @@ public class Terminal implements CommandLineRunner {
 
             // clear variables
             command = null;
-            String ledgerName = "";
-            String ledgerPassword = "";
 
             System.out.print("$> ");
             System.out.flush();
@@ -62,20 +60,31 @@ public class Terminal implements CommandLineRunner {
             switch(command){
                 case REGISTER_LEDGER:
                     System.out.println("Ledger Name: ");
-                    ledgerName = reader.nextLine();
+                    String ledgerName = reader.nextLine();
                     System.out.println("Ledger  Password: ");
-                    ledgerPassword = reader.nextLine();
+                    String ledgerPassword = reader.nextLine();
 
-                    this.clientHandler.register(ledgerName, ledgerPassword);
-                    
+                    this.clientHandler.ledgerRegister(ledgerName, ledgerPassword);
                     break;
                 case BALANCE_LEDGER:
+                    this.clientHandler.ledgerCheckBalance();
                     break;
                 case AUDIT_LEDGER:
+                    this.clientHandler.ledgerAudit();
                     break;
                 case SEND_OPERATION:
+                    System.out.println("Destination Public Key: ");
+                    String publicKey = reader.nextLine();
+                    System.out.println("Value: ");
+                    Long value = Long.valueOf(reader.nextLine());
+
+                    this.clientHandler.operationSend(value, publicKey);
                     break;
                 case RECEIVE_OPERATION:
+                    System.out.println("Operation ID: ");
+                    Long opID = Long.valueOf(reader.nextLine());
+
+                    this.clientHandler.operationReceive(opID);
                     break;
                 default:
                     break;
