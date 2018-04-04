@@ -67,6 +67,7 @@ public class Terminal implements CommandLineRunner {
                     ledgerPassword = reader.nextLine();
 
                     this.clientHandler.register(ledgerName, ledgerPassword);
+                    
                     break;
                 case BALANCE_LEDGER:
                     break;
