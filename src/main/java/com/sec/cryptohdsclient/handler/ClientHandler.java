@@ -3,6 +3,7 @@ package com.sec.cryptohdsclient.handler;
 import com.sec.cryptohdsclient.web.rest.LedgerResource;
 import com.sec.cryptohdsclient.web.rest.OperationResource;
 import com.sec.cryptohdsclient.web.rest.SecurityResource;
+import com.sec.cryptohdsclient.web.rest.exceptions.CryptohdsRestException;
 import com.sec.cryptohdslibrary.envelope.Envelope;
 import com.sec.cryptohdslibrary.envelope.Message;
 import com.sec.cryptohdslibrary.keystore.KeyStoreImpl;
@@ -57,8 +58,16 @@ public class ClientHandler {
             if (this.ledgerResource.createLedger(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey()))
                 System.out.println("OK.");
             else System.out.println("NOK.");
+
         } catch(IOException e) {
             System.out.println("Error while ciphering the Envelope!");
+
+        } catch (CryptohdsRestException e) {
+            if(e.getMessage().contains("already")) {
+                System.out.println("Using ledger with name: " + ledgerName);
+            } else {
+                System.out.println("NOK.");
+            }
         }
     }
 
