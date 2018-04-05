@@ -22,15 +22,9 @@ public class LedgerResource extends CryptohdsResource {
         this.envelopeHandler = envelopeHandler;
     }
 
-    public boolean createLedger(Envelope envelope, String publicKey) {
-        try {
-            ResponseEntity<Envelope> result = secureRequest(envelope, "ledgers", publicKey);
-            return result.getStatusCode() == HttpStatus.NO_CONTENT;
-
-        } catch (CryptohdsRestException e) {
-            System.out.println(e.getMessage());
-        }
-        return false;
+    public boolean createLedger(Envelope envelope, String publicKey) throws CryptohdsRestException {
+        ResponseEntity<Envelope> result = secureRequest(envelope, "ledgers", publicKey);
+        return result.getStatusCode() == HttpStatus.NO_CONTENT;
     }
 
     public boolean checkBalance(Envelope envelope, String publicKey, KeyStoreImpl keyStore) throws IOException, ClassNotFoundException {
