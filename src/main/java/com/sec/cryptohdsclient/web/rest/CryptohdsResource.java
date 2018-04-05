@@ -1,5 +1,6 @@
 package com.sec.cryptohdsclient.web.rest;
 
+import com.sec.cryptohdsclient.web.rest.errors.CustomRestExceptionHandler;
 import com.sec.cryptohdslibrary.envelope.Envelope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -18,6 +19,7 @@ public abstract class CryptohdsResource {
 
     protected final ResponseEntity<Envelope> secureRequest(Envelope envelope, String endpoint, String publicKey) {
         RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setErrorHandler(new CustomRestExceptionHandler());
         envelope.setClientPublicKey(publicKey);
 
         HttpEntity<?> request = new HttpEntity<Object>(envelope);
