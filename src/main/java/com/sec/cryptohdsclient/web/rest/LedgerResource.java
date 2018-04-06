@@ -5,13 +5,12 @@ import com.sec.cryptohdsclient.web.rest.exceptions.CryptohdsRestException;
 import com.sec.cryptohdslibrary.envelope.Envelope;
 import com.sec.cryptohdslibrary.keystore.KeyStoreImpl;
 import com.sec.cryptohdslibrary.service.dto.LedgerBalanceDTO;
+import com.sec.cryptohdslibrary.service.dto.LedgerDTO;
 import com.sec.cryptohdslibrary.service.dto.OperationDTO;
 import com.sec.cryptohdslibrary.service.dto.OperationListDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
 
 @Service
 public class LedgerResource extends CryptohdsResource {
@@ -22,43 +21,40 @@ public class LedgerResource extends CryptohdsResource {
         this.envelopeHandler = envelopeHandler;
     }
 
+    public int updateLedgerSeqNumber(Envelope envelope, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException {
+        ResponseEntity<Envelope> result = secureRequest(envelope, "/ledger/update", publicKey);
+
+        LedgerDTO ledgerDTO = (LedgerDTO) this.envelopeHandler.handleIncomeEnvelope(keyStore, result.getBody(), localSequenceNumber);
+
+        return ledgerDTO.getSeqNumber();
+    }
+
     public boolean createLedger(Envelope envelope, String publicKey) throws CryptohdsRestException {
         ResponseEntity<Envelope> result = secureRequest(envelope, "ledgers", publicKey);
+
         return result.getStatusCode() == HttpStatus.NO_CONTENT;
     }
 
-    public boolean checkBalance(Envelope envelope, String publicKey, KeyStoreImpl keyStore) throws IOException, ClassNotFoundException {
-        try {
-            ResponseEntity<Envelope> result = secureRequest(envelope, "ledger/balance", publicKey);
-            LedgerBalanceDTO ledgerBalanceDTO = (LedgerBalanceDTO) this.envelopeHandler.handleIncomeEnvelope(keyStore, result.getBody());
+    public boolean checkBalance(Envelope envelope, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException {
+        ResponseEntity<Envelope> result = secureRequest(envelope, "ledger/balance", publicKey);
+        LedgerBalanceDTO ledgerBalanceDTO = (LedgerBalanceDTO) this.envelopeHandler.handleIncomeEnvelope(keyStore, result.getBody(), localSequenceNumber);
 
-            System.out.println(ledgerBalanceDTO.getBalance());
-            for(OperationDTO op : ledgerBalanceDTO.getPendingOperations()) {
-                System.out.println(op);
-            }
-
-            return result.getStatusCode() == HttpStatus.OK;
-
-        } catch (CryptohdsRestException e) {
-            System.out.println(e.getMessage());
+        System.out.println(ledgerBalanceDTO.getBalance());
+        for(OperationDTO op : ledgerBalanceDTO.getPendingOperations()) {
+            System.out.println(op);
         }
-        return false;
+
+        return result.getStatusCode() == HttpStatus.OK;
     }
 
-    public boolean audit(Envelope envelope, String publicKey, KeyStoreImpl keyStore) throws IOException, ClassNotFoundException {
-        try {
-            ResponseEntity<Envelope> result = secureRequest(envelope, "ledger/audit", publicKey);
-            OperationListDTO operationListDTO = (OperationListDTO) this.envelopeHandler.handleIncomeEnvelope(keyStore, result.getBody());
+    public boolean audit(Envelope envelope, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException{
+        ResponseEntity<Envelope> result = secureRequest(envelope, "ledger/audit", publicKey);
+        OperationListDTO operationListDTO = (OperationListDTO) this.envelopeHandler.handleIncomeEnvelope(keyStore, result.getBody(), localSequenceNumber);
 
-            for(OperationDTO op : operationListDTO.getPendingOperations()) {
-                System.out.println(op);
-            }
-
-            return result.getStatusCode() == HttpStatus.OK;
-
-        } catch (CryptohdsRestException e) {
-            System.out.println(e.getMessage());
+        for(OperationDTO op : operationListDTO.getPendingOperations()) {
+            System.out.println(op);
         }
-        return false;
+
+        return result.getStatusCode() == HttpStatus.OK;
     }
 }

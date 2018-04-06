@@ -22,13 +22,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class ClientHandler {
 
-    private KeyStoreImpl clientKeyStore;
-
+    /*Spring Resources to Autowire*/
     private final LedgerResource ledgerResource;
 
     private final OperationResource operationResource;
 
     private final SecurityResource securityResource;
+
+    /*Client Handler*/
+    private KeyStoreImpl clientKeyStore;
 
     private LedgerDTO ledgerDTO;
 
@@ -55,18 +57,30 @@ public class ClientHandler {
         this.ledgerDTO = new LedgerDTO(ledgerName, CipherInstance.encodePublicKey(clientKeyStore.getkeyPairHDS().getPublic()));
 
         try {
-            if (this.ledgerResource.createLedger(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey()))
+            if (this.ledgerResource.createLedger(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey())){
                 System.out.println("OK.");
-            else System.out.println("NOK.");
-
-        } catch(IOException e) {
-            System.out.println("Error while ciphering the Envelope!");
+                this.ledgerDTO.setSeqNumber(0);
+            }
+            else {
+                System.out.println("NOK.");
+                this.clientKeyStore = null;
+            }
 
         } catch (CryptohdsRestException e) {
             if(e.getMessage().contains("already")) {
-                System.out.println("Using ledger with name: " + ledgerName);
+
+                try {
+                    int update = this.ledgerResource.updateLedgerSeqNumber(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore, this.ledgerDTO.getSeqNumber());
+                    System.out.println("Logged in with Ledger: " + ledgerName);
+                    this.ledgerDTO.setSeqNumber(update);
+
+                } catch(CryptohdsRestException ex) {
+                    System.out.println(ex.getMessage());
+                    this.clientKeyStore = null;
+                }
             } else {
-                System.out.println("NOK.");
+                System.out.println(e.getMessage());
+                this.clientKeyStore = null;
             }
         }
     }
@@ -76,11 +90,14 @@ public class ClientHandler {
             System.out.println("Register First!");
 
         try {
-            if (this.ledgerResource.checkBalance(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore))
+            if (this.ledgerResource.checkBalance(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore, ledgerDTO.getSeqNumber())) {
                 System.out.println("OK.");
+                this.ledgerDTO.setSeqNumber(this.ledgerDTO.getSeqNumber() + 1);
+            }
             else System.out.println("NOK.");
-        } catch(IOException | ClassNotFoundException e) {
-            System.out.println("Error while ciphering the Envelope!");
+
+        } catch(CryptohdsRestException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -89,11 +106,14 @@ public class ClientHandler {
             System.out.println("Register First!");
 
         try {
-            if (this.ledgerResource.audit(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore))
+            if (this.ledgerResource.audit(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore, ledgerDTO.getSeqNumber())) {
                 System.out.println("OK.");
+                this.ledgerDTO.setSeqNumber(this.ledgerDTO.getSeqNumber() + 1);
+            }
             else System.out.println("NOK.");
-        } catch(IOException | ClassNotFoundException e) {
-            System.out.println("Error while ciphering the Envelope!");
+
+        } catch(CryptohdsRestException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -107,11 +127,14 @@ public class ClientHandler {
         op.setDestinationPublicKey(destinationPublicKey);
 
         try {
-            if (this.operationResource.sendOperation(handleEnvelope(op), this.ledgerDTO.getPublicKey()))
+            if (this.operationResource.sendOperation(handleEnvelope(op), this.ledgerDTO.getPublicKey())) {
                 System.out.println("OK.");
+                this.ledgerDTO.setSeqNumber(this.ledgerDTO.getSeqNumber() + 1);
+            }
             else System.out.println("NOK.");
-        } catch(IOException e) {
-            System.out.println("Error while ciphering the Envelope!");
+
+        } catch(CryptohdsRestException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -124,18 +147,28 @@ public class ClientHandler {
         rec.setPublicKey(this.ledgerDTO.getPublicKey());
 
         try {
-            if (this.operationResource.receiveOperation(handleEnvelope(rec), this.ledgerDTO.getPublicKey()))
+            if (this.operationResource.receiveOperation(handleEnvelope(rec), this.ledgerDTO.getPublicKey())) {
                 System.out.println("OK.");
+                this.ledgerDTO.setSeqNumber(this.ledgerDTO.getSeqNumber() + 1);
+            }
             else System.out.println("NOK.");
-        } catch(IOException e) {
-            System.out.println("Error while ciphering the Envelope!");
+
+        } catch(CryptohdsRestException e) {
+            System.out.println(e.getMessage());
         }
     }
 
-    private Envelope handleEnvelope(CryptohdsDTO cryptohdsDTO) throws IOException {
-        Message message = new Message(cryptohdsDTO, this.clientKeyStore);
+    /*Used to Cypher an Envelope to Send*/
+    private Envelope handleEnvelope(CryptohdsDTO cryptohdsDTO) throws CryptohdsRestException {
+        Message message = new Message(cryptohdsDTO, this.clientKeyStore, ledgerDTO.getSeqNumber());
+
         Envelope envelope = new Envelope();
-        envelope.cipherEnvelope(message, cryptoServerPublicKey);
+        try {
+            envelope.cipherEnvelope(message, cryptoServerPublicKey);
+
+        } catch(IOException e) {
+            throw new CryptohdsRestException("Error while ciphering the Envelope!");
+        }
 
         return envelope;
     }
