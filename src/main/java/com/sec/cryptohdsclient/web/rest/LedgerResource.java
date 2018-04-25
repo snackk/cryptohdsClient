@@ -8,6 +8,7 @@ import com.sec.cryptohdslibrary.service.dto.LedgerBalanceDTO;
 import com.sec.cryptohdslibrary.service.dto.LedgerDTO;
 import com.sec.cryptohdslibrary.service.dto.OperationDTO;
 import com.sec.cryptohdslibrary.service.dto.OperationListDTO;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,8 +18,15 @@ public class LedgerResource extends CryptohdsResource {
 
     private final EnvelopeHandler envelopeHandler;
 
-    public LedgerResource(EnvelopeHandler envelopeHandler) {
+    private final Environment environment;
+
+    public LedgerResource(EnvelopeHandler envelopeHandler, Environment environment) {
         this.envelopeHandler = envelopeHandler;
+        this.environment = environment;
+
+        this.restPort = Integer.parseInt(this.environment.getProperty("rest.port"));
+        this.restIp = this.environment.getProperty("rest.ip");
+        this.URL = "http://" + restIp + ":" + restPort + "/api/";
     }
 
     public int updateLedgerSeqNumber(Envelope envelope, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException {
