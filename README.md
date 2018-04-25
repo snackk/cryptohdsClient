@@ -7,12 +7,20 @@ Before anything, the following requirements must be met:
 
 You have to create a directory named "KeyStore" under "src", this is where we store the client's keys.
 
-## Running Client
+## Running Client (Dev)
 
 To run the App on the terminal do the following:
 ```sh
 $ mvn clean install 
 $ mvn spring-boot:run
+```
+
+## Running Client (Docker)
+
+You need to pass the instance's Ip's
+```sh
+$ mvn clean install 
+$ mvn spring-boot:run -Drest.ip=127.0.0.1
 ```
 
 On IntelliJ there's no need of maven vodu, it has a spring button to run.
