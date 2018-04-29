@@ -8,10 +8,6 @@ import org.springframework.web.client.RestTemplate;
 
 public abstract class CryptohdsResource {
 
-    protected String restIp;
-
-    protected int restPort;
-
     public String URL;
 
     protected final ResponseEntity<Envelope> secureRequest(Envelope envelope, String endpoint, String publicKey) {

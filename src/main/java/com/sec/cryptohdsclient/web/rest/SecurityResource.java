@@ -1,26 +1,19 @@
 package com.sec.cryptohdsclient.web.rest;
 
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 public class SecurityResource {
 
-    private String restIp;
-
-    private int restPort;
-
     public String URL;
 
-    private final Environment environment;
+    private final CryptohdsInstances cryptohdsInstances;
 
-    public SecurityResource(Environment environment) {
-        this.environment = environment;
+    public SecurityResource(CryptohdsInstances cryptohdsInstances) {
+        this.cryptohdsInstances = cryptohdsInstances;
 
-        this.restPort = Integer.parseInt(this.environment.getProperty("rest.port"));
-        this.restIp = this.environment.getProperty("rest.ip");
-        this.URL = "http://" + restIp + ":" + restPort + "/api/";
+        this.URL = cryptohdsInstances.getUrls().get(0);
     }
 
     public String getPublicKey() {
