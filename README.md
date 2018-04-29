@@ -18,7 +18,7 @@ $ mvn spring-boot:run
 You need to pass the instance's Ip's
 ```sh
 $ mvn clean install
-$ mvn spring-boot:run -Drest.ip=127.0.0.1
+$ mvn spring-boot:run -Drest.ip=172.18.0.3,172.18.0.4,172.18.0.5
 ```
 
 On IntelliJ there's no need of maven vodu, it has a spring button to run.
