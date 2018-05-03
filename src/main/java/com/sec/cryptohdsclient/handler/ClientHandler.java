@@ -18,7 +18,6 @@ import com.sec.cryptohdslibrary.service.dto.OperationDTO;
 import com.sec.cryptohdslibrary.service.dto.ReceiveOperationDTO;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class ClientHandler {
 
@@ -121,10 +120,7 @@ public class ClientHandler {
         if(clientKeyStore == null)
             System.out.println("Register First!");
 
-        OperationDTO op = new OperationDTO();
-        op.setValue(value);
-        op.setOriginPublicKey(this.ledgerDTO.getPublicKey());
-        op.setDestinationPublicKey(destinationPublicKey);
+        OperationDTO op = new OperationDTO(ledgerDTO.getPublicKey(), destinationPublicKey, value);
 
         try {
             if (this.operationResource.sendOperation(handleEnvelope(op), this.ledgerDTO.getPublicKey())) {
