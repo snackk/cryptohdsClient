@@ -13,6 +13,7 @@ import com.sec.cryptohdslibrary.service.dto.CryptohdsDTO;
 import com.sec.cryptohdslibrary.service.dto.LedgerDTO;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import com.sec.cryptohdslibrary.service.dto.OperationDTO;
 import com.sec.cryptohdslibrary.service.dto.ReceiveOperationDTO;
@@ -33,14 +34,14 @@ public class ClientHandler {
 
     private LedgerDTO ledgerDTO;
 
-    private String cryptoServerPublicKey;
+    private HashMap<String,String> cryptoServersPubKeys;
 
     public ClientHandler(LedgerResource ledgerResource, SecurityResource securityResource, OperationResource operationResource) {
         this.ledgerResource = ledgerResource;
         this.securityResource = securityResource;
         this.operationResource = operationResource;
 
-        this.cryptoServerPublicKey = this.securityResource.getPublicKey();
+        this.cryptoServersPubKeys = this.securityResource.getPublicKey();
     }
 
     private KeyStoreImpl getKeyStore() {
@@ -155,17 +156,22 @@ public class ClientHandler {
     }
 
     /*Used to Cypher an Envelope to Send*/
-    private Envelope handleEnvelope(CryptohdsDTO cryptohdsDTO) throws CryptohdsRestException {
+    private HashMap<String, Envelope> handleEnvelope(CryptohdsDTO cryptohdsDTO) throws CryptohdsRestException {
         Message message = new Message(cryptohdsDTO, this.clientKeyStore, ledgerDTO.getSeqNumber());
+        
+        HashMap<String, Envelope> ips2return = new HashMap<>();
+        for(String ip : cryptoServersPubKeys.keySet()) {
+            Envelope envelope = new Envelope();
+            try {
+            	envelope.cipherEnvelope(message, cryptoServersPubKeys.get(ip));
+                ips2return.put(ip, envelope);
 
-        Envelope envelope = new Envelope();
-        try {
-            envelope.cipherEnvelope(message, cryptoServerPublicKey);
-
-        } catch(IOException e) {
-            throw new CryptohdsRestException("Error while ciphering the Envelope!");
+            } catch(IOException e) {
+                throw new CryptohdsRestException("Error while ciphering the Envelope!");
+            }        	
         }
 
-        return envelope;
+
+        return ips2return;
     }
 }

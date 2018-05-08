@@ -8,6 +8,9 @@ import com.sec.cryptohdslibrary.service.dto.LedgerBalanceDTO;
 import com.sec.cryptohdslibrary.service.dto.LedgerDTO;
 import com.sec.cryptohdslibrary.service.dto.OperationDTO;
 import com.sec.cryptohdslibrary.service.dto.OperationListDTO;
+
+import java.util.HashMap;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,31 +20,30 @@ public class LedgerResource extends CryptohdsResource {
 
     private final EnvelopeHandler envelopeHandler;
 
-    private final CryptohdsInstances cryptohdsInstances;
 
-    public LedgerResource(EnvelopeHandler envelopeHandler, CryptohdsInstances cryptohdsInstances) {
+
+    public LedgerResource(EnvelopeHandler envelopeHandler) {
         this.envelopeHandler = envelopeHandler;
-        this.cryptohdsInstances = cryptohdsInstances;
-
-        this.URL = cryptohdsInstances.getUrls().get(0);
+        
+       
     }
 
-    public int updateLedgerSeqNumber(Envelope envelope, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException {
-        ResponseEntity<Envelope> result = secureRequest(envelope, "/ledger/update", publicKey);
+    public int updateLedgerSeqNumber(HashMap<String, Envelope> envelopes, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException {
+        ResponseEntity<Envelope> result = secureRequest(envelopes, "/ledger/update", publicKey);
 
         LedgerDTO ledgerDTO = (LedgerDTO) this.envelopeHandler.handleIncomeEnvelope(keyStore, result.getBody(), localSequenceNumber);
 
         return ledgerDTO.getSeqNumber();
     }
 
-    public boolean createLedger(Envelope envelope, String publicKey) throws CryptohdsRestException {
-        ResponseEntity<Envelope> result = secureRequest(envelope, "ledgers", publicKey);
+    public boolean createLedger(HashMap<String, Envelope> envelopes, String publicKey) throws CryptohdsRestException {
+        ResponseEntity<Envelope> result = secureRequest(envelopes, "ledgers", publicKey);
 
         return result.getStatusCode() == HttpStatus.NO_CONTENT;
     }
 
-    public boolean checkBalance(Envelope envelope, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException {
-        ResponseEntity<Envelope> result = secureRequest(envelope, "ledger/balance", publicKey);
+    public boolean checkBalance(HashMap<String, Envelope> envelopes, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException {
+        ResponseEntity<Envelope> result = secureRequest(envelopes, "ledger/balance", publicKey);
         LedgerBalanceDTO ledgerBalanceDTO = (LedgerBalanceDTO) this.envelopeHandler.handleIncomeEnvelope(keyStore, result.getBody(), localSequenceNumber);
 
         System.out.println(ledgerBalanceDTO.getBalance());
@@ -52,8 +54,8 @@ public class LedgerResource extends CryptohdsResource {
         return result.getStatusCode() == HttpStatus.OK;
     }
 
-    public boolean audit(Envelope envelope, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException{
-        ResponseEntity<Envelope> result = secureRequest(envelope, "ledger/audit", publicKey);
+    public boolean audit(HashMap<String, Envelope> envelopes, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException{
+        ResponseEntity<Envelope> result = secureRequest(envelopes, "ledger/audit", publicKey);
         OperationListDTO operationListDTO = (OperationListDTO) this.envelopeHandler.handleIncomeEnvelope(keyStore, result.getBody(), localSequenceNumber);
 
         for(OperationDTO op : operationListDTO.getPendingOperations()) {
