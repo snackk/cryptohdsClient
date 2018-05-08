@@ -1,23 +1,31 @@
 package com.sec.cryptohdsclient.web.rest;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 public class SecurityResource {
 
-    public String URL;
+	private List<String> ips = new ArrayList<>();
 
     private final CryptohdsInstances cryptohdsInstances;
 
     public SecurityResource(CryptohdsInstances cryptohdsInstances) {
         this.cryptohdsInstances = cryptohdsInstances;
-
-        this.URL = cryptohdsInstances.getUrls().get(0);
+        this.ips = cryptohdsInstances.getUrls();
     }
-
-    public String getPublicKey() {
+    
+    public HashMap<String,String> getPublicKey() {
         RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.getForObject(URL + "security/keys", String.class);
+        HashMap<String,String> ipKeysMap = new HashMap<>();
+        for(String ip : ips) {
+        	ipKeysMap.put(ip,restTemplate.getForObject(ip + "security/keys", String.class));
+        }
+        return ipKeysMap;
+        
     }
 }
