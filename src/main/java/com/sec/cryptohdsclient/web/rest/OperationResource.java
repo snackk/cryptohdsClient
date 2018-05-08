@@ -2,6 +2,9 @@ package com.sec.cryptohdsclient.web.rest;
 
 import com.sec.cryptohdsclient.web.rest.exceptions.CryptohdsRestException;
 import com.sec.cryptohdslibrary.envelope.Envelope;
+
+import java.util.HashMap;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -9,22 +12,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class OperationResource extends CryptohdsResource {
 
-    private final CryptohdsInstances cryptohdsInstances;
-
-    public OperationResource(CryptohdsInstances cryptohdsInstances) {
-        this.cryptohdsInstances = cryptohdsInstances;
-
-        this.URL = cryptohdsInstances.getUrls().get(0);
+    public OperationResource() {
     }
 
-    public boolean sendOperation(Envelope envelope, String publicKey) throws CryptohdsRestException {
-        ResponseEntity<Envelope> result = secureRequest(envelope, "operation/send", publicKey);
+    public boolean sendOperation(HashMap<String, Envelope> envelopes, String publicKey) throws CryptohdsRestException {
+        ResponseEntity<Envelope> result = secureRequest(envelopes, "operation/send", publicKey);
 
         return result.getStatusCode() == HttpStatus.NO_CONTENT;
     }
 
-    public boolean receiveOperation(Envelope envelope, String publicKey) throws CryptohdsRestException {
-        ResponseEntity<Envelope> result = secureRequest(envelope, "operation/receive", publicKey);
+    public boolean receiveOperation(HashMap<String, Envelope> envelopes, String publicKey) throws CryptohdsRestException {
+        ResponseEntity<Envelope> result = secureRequest(envelopes, "operation/receive", publicKey);
 
         return result.getStatusCode() == HttpStatus.NO_CONTENT;
     }
