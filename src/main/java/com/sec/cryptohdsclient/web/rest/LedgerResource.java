@@ -20,12 +20,8 @@ public class LedgerResource extends CryptohdsResource {
 
     private final EnvelopeHandler envelopeHandler;
 
-
-
     public LedgerResource(EnvelopeHandler envelopeHandler) {
         this.envelopeHandler = envelopeHandler;
-        
-       
     }
 
     public int updateLedgerSeqNumber(HashMap<String, Envelope> envelopes, String publicKey, KeyStoreImpl keyStore, int localSequenceNumber) throws CryptohdsRestException {
