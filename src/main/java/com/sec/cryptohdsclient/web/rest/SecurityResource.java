@@ -1,6 +1,5 @@
 package com.sec.cryptohdsclient.web.rest;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -10,7 +9,7 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class SecurityResource {
 
-	private List<String> ips = new ArrayList<>();
+	private List<String> ips;
 
     private final CryptohdsInstances cryptohdsInstances;
 
@@ -26,6 +25,5 @@ public class SecurityResource {
         	ipKeysMap.put(ip,restTemplate.getForObject(ip + "security/keys", String.class));
         }
         return ipKeysMap;
-        
     }
 }
