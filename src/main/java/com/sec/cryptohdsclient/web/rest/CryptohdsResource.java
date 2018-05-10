@@ -1,6 +1,7 @@
 package com.sec.cryptohdsclient.web.rest;
 
 import com.sec.cryptohdsclient.web.rest.errors.CustomRestExceptionHandler;
+import com.sec.cryptohdsclient.web.rest.exceptions.CryptohdsRestException;
 import com.sec.cryptohdslibrary.envelope.Envelope;
 
 import java.util.HashMap;
@@ -9,51 +10,71 @@ import java.util.concurrent.CountDownLatch;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-public abstract class CryptohdsResource {    
-    
-	
-	
-	
-    protected final ResponseEntity<Envelope> secureRequest(HashMap<String, Envelope> envelopes, String endpoint, String publicKey) {
+public abstract class CryptohdsResource {
+
+	private int failures = 0;
+	private CryptohdsRestException exception = null;
+
+    protected final ResponseEntity<Envelope> secureRequest(HashMap<String, Envelope> envelopes, String endpoint, String publicKey) throws CryptohdsRestException{
+    	this.failures = 0;
+		this.exception = null;
+
     	int numServers = envelopes.size();
-		final int failures = (numServers - 1)/3;
-    	final CountDownLatch l = new CountDownLatch(2 * failures + 1);
+		final int toleratedFailures = (numServers - 1)/3;
+
+    	final CountDownLatch l = new CountDownLatch(2 * toleratedFailures + 1);
     	ConcurrentHashMap<String, ResponseEntity<Envelope>> responseHashMap = new ConcurrentHashMap<>();
     	
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.setErrorHandler(new CustomRestExceptionHandler());
+
         for(String ip : envelopes.keySet()) {
         	Envelope envelope = envelopes.get(ip);
         	envelope.setClientPublicKey(publicKey);
 
-        	Thread t = new Thread(new Runnable() {
+			Thread t = new Thread(() -> {
+				try {
+					HttpEntity<?> request = new HttpEntity<Object>(envelope);
 
-				@Override
-				public void run() {
-					try {
-						HttpEntity<?> request = new HttpEntity<Object>(envelope);
-				        
-				        responseHashMap.put(ip, restTemplate.postForEntity(ip + endpoint, request, Envelope.class));
+					responseHashMap.put(ip, restTemplate.postForEntity(ip + endpoint, request, Envelope.class));
+
+				} catch(CryptohdsRestException e) {
+					if(e.getMessage().contains("already")) {
+						synchronized (this) {
+							this.exception = e;
+						}
 					}
-					catch(Exception e){
+
+				} catch(RestClientException e){
+					// Caught if byzantine crash
+					synchronized (this) {
+						this.failures++;
 					}
-					finally{
-						l.countDown();						
-					}
+				} finally {
+					l.countDown();
 				}
-        	});
-        	t.start();       	
+			});
+
+			t.start();
         }
         try {
         	l.await();
-        }
-        catch(InterruptedException e){
+
+        } catch(InterruptedException e){
        
 		}
-		//TODO Review this shitty code WTF.
-		// Also, result.headers[0].value[0] -> contains Wed, 09 May 2018 00:27:58 GMT.  Timestamp criado no servidor
-		return responseHashMap.entrySet().iterator().next().getValue();
+
+		if (exception != null) {
+        	throw exception;
+		}
+		
+		if(failures > toleratedFailures) {
+			throw new CryptohdsRestException("Not enough servers(" + (numServers - failures) + "/" + numServers + ") to process your request.");
+		} else {
+        	return responseHashMap.entrySet().iterator().next().getValue();
+        }
     }
 }
