@@ -34,6 +34,7 @@ public class ClientHandler {
 
     private LedgerDTO ledgerDTO;
 
+    /*Store servers*/
     private HashMap<String,String> cryptoServersPubKeys;
 
     public ClientHandler(LedgerResource ledgerResource, SecurityResource securityResource, OperationResource operationResource) {
@@ -170,7 +171,6 @@ public class ClientHandler {
                 throw new CryptohdsRestException("Error while ciphering the Envelope!");
             }        	
         }
-
 
         return ips2return;
     }
