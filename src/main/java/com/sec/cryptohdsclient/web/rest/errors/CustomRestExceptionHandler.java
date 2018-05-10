@@ -16,7 +16,7 @@ public class CustomRestExceptionHandler implements ResponseErrorHandler {
         return errorHandler.hasError(response);
     }
 
-    public void handleError(ClientHttpResponse response) throws IOException {
+    public void handleError(ClientHttpResponse response) throws IOException, CryptohdsRestException {
         ObjectMapper mapper = new ObjectMapper();
 
         ApiError result = mapper.readValue(response.getBody(), ApiError.class);
