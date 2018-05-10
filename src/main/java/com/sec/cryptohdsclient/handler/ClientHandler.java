@@ -14,6 +14,7 @@ import com.sec.cryptohdslibrary.service.dto.LedgerDTO;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.sec.cryptohdslibrary.service.dto.OperationDTO;
 import com.sec.cryptohdslibrary.service.dto.ReceiveOperationDTO;
@@ -34,6 +35,9 @@ public class ClientHandler {
 
     private LedgerDTO ledgerDTO;
 
+    /*Sequence numbers for each server*/
+    private Map<String, Integer> sequenceNumbers = new HashMap<>();
+
     /*Store servers*/
     private HashMap<String,String> cryptoServersPubKeys;
 
@@ -43,6 +47,9 @@ public class ClientHandler {
         this.operationResource = operationResource;
 
         this.cryptoServersPubKeys = this.securityResource.getPublicKey();
+        for(String ip : this.cryptoServersPubKeys.keySet()) {
+            sequenceNumbers.put(ip, 0);
+        }
     }
 
     private KeyStoreImpl getKeyStore() {
