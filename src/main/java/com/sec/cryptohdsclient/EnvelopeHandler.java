@@ -9,8 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 @Service
 public class EnvelopeHandler {
@@ -19,12 +20,59 @@ public class EnvelopeHandler {
 
     }
 
-    public CryptohdsDTO handleIncomeEnvelopes(KeyStoreImpl clientKeyStore, List<ResponseEntity<Envelope>> envelopes, int localSequenceNumber) throws CryptohdsRestException {
-        Message storedMessage = null;
-        Envelope storedEnvelope = null;
-        HashMap<Message, Envelope> messages = new HashMap<>();
+    public CryptohdsDTO handleIncomeEnvelopes(KeyStoreImpl clientKeyStore, HashMap<String, ResponseEntity<Envelope>> envelopes, Map<String, Integer> localSequenceNumbers) throws CryptohdsRestException {
 
-        for(ResponseEntity<Envelope> envelope : envelopes) {
+        HashMap<String, Message> messages = getEnvelopeMessages(clientKeyStore, envelopes, localSequenceNumbers);
+
+        HashMap<Integer, Integer> messageQuorum = new HashMap<>();
+        messages.entrySet().stream().forEach(k -> messageQuorum.put(k.getValue().getSeqNumber(), 0));
+
+        Message storedMessage = null;
+        for(String ip: messages.keySet()) {
+            localSequenceNumbers.put(ip, localSequenceNumbers.get(ip) + 1);
+
+            messageQuorum.put(localSequenceNumbers.get(ip),messageQuorum.get(localSequenceNumbers.get(ip)) + 1);
+        }
+
+        Integer maxFreq = 0;
+        Integer maxSeqNumber = 0;
+        for(Integer seqNumber : messageQuorum.keySet()) {
+            Integer frequency = messageQuorum.get(seqNumber);
+            if (frequency > maxFreq) {
+                maxFreq = frequency;
+                maxSeqNumber = seqNumber;
+            }
+            if(frequency == maxFreq && seqNumber > maxSeqNumber) {
+                maxFreq = frequency;
+                maxSeqNumber = seqNumber;
+            }
+        }
+
+        for(Message message : messages.values()){
+            if(message.getSeqNumber() == maxSeqNumber){
+                storedMessage = message;
+            }
+        }
+
+        if (storedMessage != null)
+            return storedMessage.getContent();
+        else return null;
+    }
+
+    public void updateSeqNumberFromEnvelopes(KeyStoreImpl clientKeyStore, HashMap<String, ResponseEntity<Envelope>> envelopes, Map<String, Integer> localSequenceNumbers) throws CryptohdsRestException {
+        HashMap<String, Message> messages = getEnvelopeMessages(clientKeyStore, envelopes, localSequenceNumbers);
+
+        for(String ip : messages.keySet()) {
+            localSequenceNumbers.put(ip, messages.get(ip).getSeqNumber());
+        }
+    }
+
+    private HashMap<String, Message> getEnvelopeMessages(KeyStoreImpl clientKeyStore, HashMap<String, ResponseEntity<Envelope>> envelopes, Map<String, Integer> localSequenceNumbers) throws CryptohdsRestException {
+        HashMap<String, Message> messages = new HashMap<>();
+
+        for(String ip : envelopes.keySet()) {
+            ResponseEntity<Envelope> envelope = envelopes.get(ip);
+
             Message temp = null;
             try {
                 temp = envelope.getBody().decipherEnvelope(clientKeyStore);
@@ -32,29 +80,18 @@ public class EnvelopeHandler {
             } catch(ClassNotFoundException | IOException e) {
                 throw new CryptohdsRestException("Error on deciphering Envelope!");
             }
-            messages.put(temp, envelope.getBody());
-        }
 
-        int maxSeqNumber = 0;
-        for(Message message : messages.keySet()) {
+            messages.put(ip, temp);
 
-            if(message.getSeqNumber() > maxSeqNumber) {
-                maxSeqNumber = message.getSeqNumber();
-                storedMessage = message;
-                storedEnvelope = messages.get(message);
+            if (localSequenceNumbers.get(ip) != -1 && temp != null && (temp.getSeqNumber() != localSequenceNumbers.get(ip) + 1)) {
+                throw new CryptohdsRestException("Ledger sequence number doesn't match with server's!");
+            }
+
+            if (temp != null &&  !temp.verifyMessageSignature(envelope.getBody().getClientPublicKey())) {
+                throw new CryptohdsRestException("Envelope validation failed!");
             }
         }
 
-        if (localSequenceNumber != -1 && storedMessage != null && (storedMessage.getSeqNumber() != localSequenceNumber + 1)) {
-            throw new CryptohdsRestException("Ledger sequence number doesn't match with server's!");
-        }
-
-        if (storedMessage != null &&  !storedMessage.verifyMessageSignature(storedEnvelope.getClientPublicKey())) {
-            throw new CryptohdsRestException("Envelope validation failed!");
-        }
-
-        if (storedMessage != null)
-            return storedMessage.getContent();
-        else return null;
+        return messages;
     }
 }
