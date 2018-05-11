@@ -46,14 +46,21 @@ public class ClientHandler {
         this.securityResource = securityResource;
         this.operationResource = operationResource;
 
+        /*Initialize public keys for each server*/
         this.cryptoServersPubKeys = this.securityResource.getPublicKey();
-        for(String ip : this.cryptoServersPubKeys.keySet()) {
-            sequenceNumbers.put(ip, 0);
-        }
+
+        initServersSeqNumber(-1);
     }
 
     private KeyStoreImpl getKeyStore() {
         return clientKeyStore;
+    }
+
+    private void initServersSeqNumber(int seqNumber) {
+        /*Initialize sequence number for each server*/
+        for(String ip : this.cryptoServersPubKeys.keySet()) {
+            sequenceNumbers.put(ip, seqNumber);
+        }
     }
 
     public void ledgerRegister(String ledgerName, String ledgerPassword) {
@@ -67,7 +74,7 @@ public class ClientHandler {
         try {
             if (this.ledgerResource.createLedger(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey())){
                 System.out.println("OK.");
-                this.ledgerDTO.setSeqNumber(0);
+                initServersSeqNumber(0);
             }
             else {
                 System.out.println("NOK.");
@@ -78,9 +85,8 @@ public class ClientHandler {
             if(e.getMessage().contains("already")) {
 
                 try {
-                    int update = this.ledgerResource.updateLedgerSeqNumber(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore, this.ledgerDTO.getSeqNumber());
+                    this.ledgerResource.updateLedgerSeqNumber(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore, this.sequenceNumbers);
                     System.out.println("Logged in with Ledger: " + ledgerName);
-                    this.ledgerDTO.setSeqNumber(update);
 
                 } catch(CryptohdsRestException ex) {
                     System.out.println(ex.getMessage());
@@ -98,9 +104,8 @@ public class ClientHandler {
             System.out.println("Register First!");
 
         try {
-            if (this.ledgerResource.checkBalance(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore, ledgerDTO.getSeqNumber())) {
+            if (this.ledgerResource.checkBalance(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore, this.sequenceNumbers)) {
                 System.out.println("OK.");
-                this.ledgerDTO.setSeqNumber(this.ledgerDTO.getSeqNumber() + 1);
             }
             else System.out.println("NOK.");
 
@@ -114,9 +119,8 @@ public class ClientHandler {
             System.out.println("Register First!");
 
         try {
-            if (this.ledgerResource.audit(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore, ledgerDTO.getSeqNumber())) {
+            if (this.ledgerResource.audit(handleEnvelope(this.ledgerDTO), this.ledgerDTO.getPublicKey(), clientKeyStore, this.sequenceNumbers)) {
                 System.out.println("OK.");
-                this.ledgerDTO.setSeqNumber(this.ledgerDTO.getSeqNumber() + 1);
             }
             else System.out.println("NOK.");
 
@@ -134,7 +138,6 @@ public class ClientHandler {
         try {
             if (this.operationResource.sendOperation(handleEnvelope(op), this.ledgerDTO.getPublicKey())) {
                 System.out.println("OK.");
-                this.ledgerDTO.setSeqNumber(this.ledgerDTO.getSeqNumber() + 1);
             }
             else System.out.println("NOK.");
 
@@ -154,7 +157,6 @@ public class ClientHandler {
         try {
             if (this.operationResource.receiveOperation(handleEnvelope(rec), this.ledgerDTO.getPublicKey())) {
                 System.out.println("OK.");
-                this.ledgerDTO.setSeqNumber(this.ledgerDTO.getSeqNumber() + 1);
             }
             else System.out.println("NOK.");
 
@@ -165,10 +167,13 @@ public class ClientHandler {
 
     /*Used to Cypher an Envelope to Send*/
     private HashMap<String, Envelope> handleEnvelope(CryptohdsDTO cryptohdsDTO) throws CryptohdsRestException {
-        Message message = new Message(cryptohdsDTO, this.clientKeyStore, ledgerDTO.getSeqNumber());
+        Message message = new Message(cryptohdsDTO, this.clientKeyStore, -1);
         
         HashMap<String, Envelope> ips2return = new HashMap<>();
         for(String ip : cryptoServersPubKeys.keySet()) {
+
+            message.setSeqNumber(this.sequenceNumbers.get(ip));
+
             Envelope envelope = new Envelope();
             try {
             	envelope.cipherEnvelope(message, cryptoServersPubKeys.get(ip));

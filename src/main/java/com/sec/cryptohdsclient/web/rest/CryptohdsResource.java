@@ -5,10 +5,8 @@ import com.sec.cryptohdsclient.web.rest.exceptions.CryptohdsRestException;
 import com.sec.cryptohdslibrary.envelope.Envelope;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +18,7 @@ public abstract class CryptohdsResource {
 	private int failures = 0;
 	private CryptohdsRestException exception = null;
 
-	protected final List<ResponseEntity<Envelope>> secureRequests(HashMap<String, Envelope> envelopes, String endpoint, String publicKey) throws CryptohdsRestException{
+	protected final HashMap<String, ResponseEntity<Envelope>> secureRequests(HashMap<String, Envelope> envelopes, String endpoint, String publicKey) throws CryptohdsRestException{
 		this.failures = 0;
 		this.exception = null;
 
@@ -44,20 +42,23 @@ public abstract class CryptohdsResource {
 					responseHashMap.put(ip, restTemplate.postForEntity(ip + endpoint, request, Envelope.class));
 
 				} catch(CryptohdsRestException e) {
+
 					if(e.getMessage().contains("already")) {
 						synchronized (this) {
 							this.exception = e;
 						}
 					}
-					//If Server's SeqNumber is old
+
+					/*If Server's SeqNumber is old*/
 					if(e.getMessage().contains("sequence number")) {
 						synchronized (this) {
 							this.failures++;
 						}
+
 					}
 
 				} catch(RestClientException e){
-					// Caught if byzantine crash
+					/*Caught if byzantine crash*/
 					synchronized (this) {
 						this.failures++;
 					}
@@ -79,10 +80,18 @@ public abstract class CryptohdsResource {
 			throw exception;
 		}
 
+//		if((responseHashMap.keySet().size() + failures) < numServers) {
+//			failures += numServers - responseHashMap.keySet().size();
+//		}
+
 		if(failures > toleratedFailures) {
 			throw new CryptohdsRestException("Not enough servers(" + (numServers - failures) + "/" + numServers + ") to process your request.");
 		} else {
-			return responseHashMap.entrySet().stream().map(map -> map.getValue()).collect(Collectors.toList());
+			HashMap<String, ResponseEntity<Envelope>> toReturn = new HashMap<>();
+			for(String ip : responseHashMap.keySet()) {
+				toReturn.put(ip, responseHashMap.get(ip));
+			}
+			return toReturn;
 		}
 	}
 }
