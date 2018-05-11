@@ -17,14 +17,14 @@ public class OperationResource extends CryptohdsResource {
     }
 
     public boolean sendOperation(HashMap<String, Envelope> envelopes, String publicKey) throws CryptohdsRestException {
-        List<ResponseEntity<Envelope>> results = secureRequests(envelopes, "operation/send", publicKey);
+        HashMap<String, ResponseEntity<Envelope>> results = secureRequests(envelopes, "operation/send", publicKey);
 
 //        return result.getStatusCode() == HttpStatus.NO_CONTENT;
         return true;
     }
 
     public boolean receiveOperation(HashMap<String, Envelope> envelopes, String publicKey) throws CryptohdsRestException {
-        List<ResponseEntity<Envelope>> results = secureRequests(envelopes, "operation/receive", publicKey);
+        HashMap<String, ResponseEntity<Envelope>> results = secureRequests(envelopes, "operation/receive", publicKey);
 
 //        return result.getStatusCode() == HttpStatus.NO_CONTENT;
         return true;
