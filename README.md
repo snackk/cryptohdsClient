@@ -22,3 +22,5 @@ $ mvn spring-boot:run -Drest.ip=172.18.0.3,172.18.0.4,172.18.0.5
 ```
 
 On IntelliJ there's no need of maven vodu, it has a spring button to run.
+
+  Written by [@snackk](https://github.com/snackk)
